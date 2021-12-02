@@ -1,11 +1,11 @@
 #ifndef SHMSEG_H
 #define SHMSEG_H
-
+#include <iostream>
+using namespace std;
 class ShmSeg {
-	private:
+	public:
 		int resources[20][2];
-
-	public: 
+		int p, lines; 
 		struct Clock {
 			int seconds;
 			int nanoseconds;
@@ -13,6 +13,7 @@ class ShmSeg {
 	
 		void initResources (int temp [][2]) {
 			for (int i; i < 20; i++) {
+cout << "shm " << temp [i][0] << endl;
 				this->resources[i][0] = temp[i][0];
 				this->resources[i][1] = temp[i][1];
 			}
@@ -34,8 +35,8 @@ class ShmSeg {
 			this->resources[r][0] -= ask;
 		}
 
-		void returnResource (int r, int ask) {
-			this->resources[r][0] += ask;
+		void returnResource (int r, int h) {
+			this->resources[r][0] += h;
 		}
 };
 

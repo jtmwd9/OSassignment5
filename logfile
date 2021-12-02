@@ -1,0 +1,4 @@
+Process with PID 2532 requesting 4 instances of resource 9 at time 2672:-2009995620
+Process with PID 2533 requesting 9 instances of resource 15 at time 2684:837544692
+Process with PID 2533 releasing resource 15 at time 4400:1994168961
+Process with PID 2532 releasing resource 9 at time 4473:-262020985

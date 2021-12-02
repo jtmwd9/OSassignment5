@@ -4,6 +4,8 @@
 #include <sys/shm.h>
 #include <errno.h>
 #include <sys/msg.h>
+#include <cstdlib>
+#include <unistd.h>
 #include "shmseg.h"
 #include "msgq.h"
 
@@ -15,14 +17,6 @@ struct mesg_buffer {
 } messageRun;
 
 int validateArguments (int num) {
-	if (num == -69) {
-		//no arg
-		return 10;
-	}	
-	if (num < 1 || num > 20) {
-		//warning use 20 as num
-		return 10;
-	}
 	return num;
 }
 
@@ -45,12 +39,30 @@ int initSharedMemory (ShmSeg *&l) {
 	return shmid;
 }
 
-void initResourceArray (ShmSeg *&l) {
-	
+void initResources (ShmSeg *&l) {
+	int temp [20][2];
+	int scale;
+	for (int i = 0; i < 20; i++) {
+		temp[i][0] = rand() % 10 + 1;
+		scale = rand() % 5 + 1;
+		if (scale == 3) {
+			temp[i][1] = 1;
+		}
+cout << temp[i][0] << endl;
+	}
+	l->initResources(temp);
+	l->p = 0;
+	l->lines = 0;
+cout << "! " << l->resources[1][0] << endl;
 }
 
 void updateClock (ShmSeg *&l, int seconds, int nanoseconds) {
-
+	l->clock.seconds += seconds;
+	l->clock.nanoseconds += nanoseconds;
+	if (l->clock.nanoseconds >= 1000000000) {
+		l->clock.seconds++;
+		l->clock.nanoseconds -= 1000000000;
+	}
 }
 
 void detachSharedMemory (ShmSeg *&l) {
@@ -82,14 +94,39 @@ void destroyMessageQueue (int msgid) {
 	msgctl(msgid, IPC_RMID, NULL);
 }
 
+void spawn (ShmSeg *&l) {
+	pid_t pid;
+	pid = fork();
+	if (pid == -1) {
+
+	} else if (pid == 0) {//child
+		char* argv_list [] = {"./user_proc", NULL};
+		execv("./user_proc", argv_list);
+		exit(0);
+	} 
+}
+
 int main (int argc, char* argv[]) {
 	ShmSeg *segment;
-	int shmid, destroySuccess;
+	srand(time(NULL));
+	int shmid, destroySuccess, timer;
 	shmid = initSharedMemory(segment);
 	if (shmid == 1) {
 		cout << "error";
 		return 1;
 	}
+
+	initResources(segment);
+cout << "oss r " << segment->resources[1][0] << endl;
+	while(segment->lines < 10000 || segment->clock.seconds < 5 || segment->p < 12) {
+		timer = rand() % 500000000000 + 1;
+		updateClock(segment, 0 , timer);
+		if (segment->p < 12) {
+			segment->p++;
+			spawn(segment);
+		}
+	};
+
 	detachSharedMemory(segment);
 	destroySuccess = destroySharedMemory(shmid);
 	if (destroySuccess == 1) {
